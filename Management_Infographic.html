@@ -1,0 +1,2361 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vendor Repush Automation – Management Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #030712;
+      --card: rgba(17, 24, 39, 0.6);
+      --card-alt: rgba(31, 41, 55, 0.5);
+      --accent: #3b82f6;
+      --accent2: #8b5cf6;
+      --accent3: #06b6d4;
+      --green: #10b981;
+      --red: #f43f5e;
+      --amber: #f59e0b;
+      --text: #f8fafc;
+      --muted: #94a3b8;
+      --border: rgba(255, 255, 255, 0.08);
+      --glow: 0 0 50px rgba(59, 130, 246, 0.2);
+      --glass: backdrop-filter: blur(16px) saturate(180%);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(139, 92, 246, 0.12) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(6, 182, 212, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 20%, rgba(244, 63, 94, 0.05) 0%, transparent 30%);
+      animation: ambientShift 25s ease-in-out infinite alternate;
+      z-index: 0;
+    }
+
+    @keyframes ambientShift {
+      0% {
+        transform: translate(0, 0) scale(1) rotate(0deg);
+      }
+
+      50% {
+        transform: translate(-3%, -2%) scale(1.05) rotate(2deg);
+      }
+
+      100% {
+        transform: translate(-5%, -4%) scale(1) rotate(-1deg);
+      }
+    }
+
+    .container {
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 40px 24px;
+      position: relative;
+      z-index: 1;
+    }
+
+    /* Hero */
+    .hero {
+      text-align: center;
+      padding: 50px 20px 36px;
+      margin-bottom: 40px;
+      animation: heroEntrance 1.2s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes heroEntrance {
+      0% {
+        opacity: 0;
+        transform: translateY(-40px) scale(0.95);
+      }
+
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .hero-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 20px;
+      padding: 6px 18px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 20px;
+      animation: badgePulse 3s ease-in-out infinite;
+    }
+
+    @keyframes badgePulse {
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.2);
+      }
+
+      50% {
+        box-shadow: 0 0 20px 4px rgba(59, 130, 246, 0.15);
+      }
+    }
+
+    .hero h1 {
+      font-size: 54px;
+      font-weight: 900;
+      background: linear-gradient(to right, #fff 20%, var(--accent3) 40%, var(--accent2) 60%, #fff 80%);
+      background-size: 200% auto;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      letter-spacing: -1px;
+      animation: shineX 5s linear infinite;
+      filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.3));
+    }
+
+    @keyframes shineX {
+      to {
+        background-position: 200% center;
+      }
+    }
+
+    .hero .subtitle {
+      font-size: 20px;
+      color: var(--muted);
+      font-weight: 300;
+      animation: heroEntrance 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
+    }
+
+    .hero .date {
+      font-size: 13px;
+      color: var(--muted);
+      margin-top: 12px;
+      opacity: 0.7;
+      animation: heroEntrance 1.2s cubic-bezier(0.22, 1, 0.36, 1) 0.5s both;
+    }
+
+    /* Sections — scroll-reveal controlled */
+    .section {
+      margin-bottom: 52px;
+      opacity: 0;
+      transform: translateY(50px);
+      transition: opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .section.revealed {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-label {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 3px;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 28px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: #fff;
+    }
+
+    /* Cards */
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+      opacity: 0;
+      transform: translateY(30px) scale(0.98);
+      box-shadow: 0 4px 24px -6px rgba(0, 0, 0, 0.5);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      border-left: 1px solid rgba(255, 255, 255, 0.05);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      transform-style: preserve-3d;
+      perspective: 1000px;
+    }
+
+    .section.revealed .card {
+      opacity: 1;
+      transform: translateY(0) scale(1) translateZ(0);
+    }
+
+    /* Staggered card entrance */
+    .section.revealed .grid-2 .card:nth-child(1),
+    .section.revealed .grid-3 .card:nth-child(1),
+    .section.revealed .grid-2-1 .card:nth-child(1),
+    .section.revealed .kpi-grid .card:nth-child(1) {
+      transition-delay: 0.1s;
+    }
+
+    .section.revealed .grid-2 .card:nth-child(2),
+    .section.revealed .grid-3 .card:nth-child(2),
+    .section.revealed .grid-2-1 .card:nth-child(2),
+    .section.revealed .kpi-grid .card:nth-child(2) {
+      transition-delay: 0.2s;
+    }
+
+    .section.revealed .grid-3 .card:nth-child(3),
+    .section.revealed .kpi-grid .card:nth-child(3) {
+      transition-delay: 0.3s;
+    }
+
+    .section.revealed .kpi-grid .card:nth-child(4) {
+      transition-delay: 0.4s;
+    }
+
+    .section.revealed .kpi-grid .card:nth-child(5) {
+      transition-delay: 0.5s;
+    }
+
+    .section.revealed .kpi-grid .card:nth-child(6) {
+      transition-delay: 0.6s;
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      right: 0;
+      height: 2px;
+      width: 100%;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.8), rgba(139, 92, 246, 0.8), transparent);
+      transition: left 0.8s ease;
+      z-index: 10;
+    }
+
+    .section.revealed .card::before {
+      left: 100%;
+      animation: scanningLine 6s linear infinite 2s;
+    }
+
+    @keyframes scanningLine {
+      0% {
+        left: -100%;
+      }
+
+      10% {
+        left: 100%;
+      }
+
+      100% {
+        left: 100%;
+      }
+    }
+
+    .card:hover {
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: 0 10px 40px rgba(59, 130, 246, 0.2), inset 0 0 20px rgba(255, 255, 255, 0.02);
+    }
+
+    /* KPI Grid */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 18px;
+      margin-bottom: 32px;
+    }
+
+    .kpi-card {
+      text-align: center;
+      padding: 28px 14px;
+    }
+
+    .kpi-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 14px;
+      font-size: 20px;
+    }
+
+    .kpi-icon.blue {
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .kpi-icon.purple {
+      background: rgba(139, 92, 246, 0.15);
+    }
+
+    .kpi-icon.cyan {
+      background: rgba(6, 182, 212, 0.15);
+    }
+
+    .kpi-icon.amber {
+      background: rgba(245, 158, 11, 0.15);
+    }
+
+    .kpi-icon.red {
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    .kpi-value {
+      font-size: 36px;
+      font-weight: 800;
+      background: linear-gradient(135deg, #fff, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      line-height: 1.1;
+      margin-bottom: 4px;
+    }
+
+    .kpi-label {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 500;
+    }
+
+    .kpi-sub {
+      font-size: 10px;
+      margin-top: 8px;
+      padding: 3px 10px;
+      border-radius: 10px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    .kpi-sub.up {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--red);
+    }
+
+    .kpi-sub.down {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--green);
+    }
+
+    .kpi-sub.neutral {
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--accent);
+    }
+
+    /* Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-2-1 {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    .grid-1-2 {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 24px;
+    }
+
+    .chart-container {
+      position: relative;
+      height: 320px;
+    }
+
+    .chart-container-sm {
+      position: relative;
+      height: 260px;
+    }
+
+    .chart-container-md {
+      position: relative;
+      height: 280px;
+    }
+
+    .card-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 18px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .card-title .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .dot.blue {
+      background: var(--accent);
+    }
+
+    .dot.purple {
+      background: var(--accent2);
+    }
+
+    .dot.cyan {
+      background: var(--accent3);
+    }
+
+    .dot.red {
+      background: var(--red);
+    }
+
+    .dot.green {
+      background: var(--green);
+    }
+
+    .dot.amber {
+      background: var(--amber);
+    }
+
+    /* Flow */
+    .flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      padding: 24px 0;
+    }
+
+    .flow-node {
+      background: linear-gradient(135deg, var(--card-alt), var(--card));
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 18px 22px;
+      text-align: center;
+      min-width: 140px;
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      opacity: 0;
+      transform: translateX(-20px);
+    }
+
+    .section.revealed .flow-node {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .section.revealed .flow-node:nth-child(1) {
+      transition-delay: 0.1s;
+    }
+
+    .section.revealed .flow-node:nth-child(3) {
+      transition-delay: 0.3s;
+    }
+
+    .section.revealed .flow-node:nth-child(5) {
+      transition-delay: 0.5s;
+    }
+
+    .section.revealed .flow-node:nth-child(7) {
+      transition-delay: 0.7s;
+    }
+
+    .section.revealed .flow-node:nth-child(9) {
+      transition-delay: 0.9s;
+    }
+
+    .section.revealed .flow-arrow {
+      animation: arrowPulse 2s ease-in-out infinite;
+    }
+
+    .flow-node:hover {
+      border-color: var(--accent);
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.25);
+      transform: scale(1.08) translateY(-2px);
+    }
+
+    .flow-node .node-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+      transition: transform 0.3s ease;
+    }
+
+    .flow-node:hover .node-icon {
+      transform: scale(1.2);
+    }
+
+    .flow-node .node-label {
+      font-size: 13px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .flow-node .node-sub {
+      font-size: 10px;
+      color: var(--muted);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .flow-arrow {
+      font-size: 20px;
+      color: var(--accent);
+      padding: 0 8px;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    .section.revealed .flow-arrow {
+      opacity: 1;
+    }
+
+    @keyframes arrowPulse {
+
+      0%,
+      100% {
+        opacity: 0.3;
+        transform: translateX(0);
+      }
+
+      50% {
+        opacity: 1;
+        transform: translateX(3px);
+      }
+    }
+
+    /* Risk items */
+    .risk-item {
+      background: var(--card-alt);
+      border-radius: 12px;
+      padding: 18px;
+      margin-bottom: 12px;
+      border-left: 4px solid;
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .risk-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.02) 100%);
+      opacity: 0;
+      transition: opacity 0.4s ease;
+    }
+
+    .risk-item:hover {
+      transform: translateX(6px);
+      background: rgba(26, 34, 52, 0.9);
+    }
+
+    .risk-item:hover::after {
+      opacity: 1;
+    }
+
+    .risk-item.critical {
+      border-left-color: var(--red);
+    }
+
+    .risk-item.high {
+      border-left-color: var(--amber);
+    }
+
+    .risk-item.medium {
+      border-left-color: var(--accent);
+    }
+
+    .risk-level {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+    }
+
+    .risk-level.critical {
+      color: var(--red);
+    }
+
+    .risk-level.high {
+      color: var(--amber);
+    }
+
+    .risk-level.medium {
+      color: var(--accent);
+    }
+
+    .risk-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .risk-desc {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .risk-action {
+      font-size: 11px;
+      color: var(--green);
+      margin-top: 6px;
+      font-weight: 500;
+    }
+
+    /* Timeline */
+    .timeline {
+      position: relative;
+      padding-left: 32px;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 10px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--accent), var(--accent2));
+    }
+
+    .timeline-item {
+      position: relative;
+      margin-bottom: 14px;
+      padding: 12px 16px;
+      background: var(--card-alt);
+      border-radius: 10px;
+      transition: all 0.3s ease;
+    }
+
+    .timeline-item:hover {
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .timeline-item::before {
+      content: '✓';
+      position: absolute;
+      left: -28px;
+      top: 14px;
+      width: 18px;
+      height: 18px;
+      background: var(--green);
+      border-radius: 50%;
+      font-size: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+    }
+
+    .timeline-item.pending::before {
+      content: '!';
+      background: var(--amber);
+    }
+
+    .timeline-text {
+      font-size: 12px;
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    /* Effort bars */
+    .effort-bar-container {
+      margin-bottom: 16px;
+    }
+
+    .effort-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .effort-bar {
+      height: 10px;
+      border-radius: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+    }
+
+    .effort-fill {
+      height: 100%;
+      border-radius: 5px;
+      transition: width 1.5s ease-out;
+      width: 0;
+    }
+
+    /* SOP steps */
+    .sop-step {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .sop-num {
+      width: 30px;
+      height: 30px;
+      min-width: 30px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .sop-content strong {
+      font-size: 12px;
+      color: #fff;
+      display: block;
+      margin-bottom: 2px;
+    }
+
+    .sop-content span {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    /* Contact grid */
+    .contact-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 14px;
+    }
+
+    .contact-card {
+      background: var(--card-alt);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      transition: all 0.3s ease;
+      border: 1px solid transparent;
+    }
+
+    .contact-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(59, 130, 246, 0.1);
+    }
+
+    .contact-icon {
+      font-size: 30px;
+      margin-bottom: 8px;
+    }
+
+    .contact-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .contact-role {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .contact-group {
+      margin-top: 8px;
+      font-size: 10px;
+      background: rgba(59, 130, 246, 0.12);
+      color: var(--accent);
+      padding: 4px 10px;
+      border-radius: 6px;
+      display: inline-block;
+      font-weight: 600;
+    }
+
+    /* Callouts */
+    .callout {
+      border-radius: 14px;
+      padding: 22px 26px;
+      margin-top: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .callout.warning {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.08), rgba(245, 158, 11, 0.05));
+      border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+
+    .callout.success {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(6, 182, 212, 0.05));
+      border: 1px solid rgba(34, 197, 94, 0.2);
+    }
+
+    .callout-icon {
+      font-size: 32px;
+    }
+
+    .callout-text h3 {
+      font-size: 15px;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .callout-text p {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .callout.warning .callout-text h3 {
+      color: var(--red);
+    }
+
+    .callout.success .callout-text h3 {
+      color: var(--green);
+    }
+
+    .savings-box {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.08), rgba(6, 182, 212, 0.05));
+      border: 1px solid rgba(34, 197, 94, 0.2);
+      border-radius: 14px;
+      padding: 20px 24px;
+      margin-top: 14px;
+      text-align: center;
+    }
+
+    .savings-value {
+      font-size: 32px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--green), var(--accent3));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .savings-label {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    /* Insight boxes */
+    .insight-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+      margin-top: 20px;
+    }
+
+    .insight-card {
+      background: var(--card-alt);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: center;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .insight-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+    }
+
+    .insight-value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 4px;
+    }
+
+    .insight-value.red {
+      color: var(--red);
+    }
+
+    .insight-value.amber {
+      color: var(--amber);
+    }
+
+    .insight-value.green {
+      color: var(--green);
+    }
+
+    .insight-value.blue {
+      color: var(--accent);
+    }
+
+    .insight-label {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    /* Before/After comparison */
+    .compare-grid {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0;
+      align-items: stretch;
+    }
+
+    .compare-box {
+      padding: 24px;
+      border-radius: 14px;
+    }
+
+    .compare-box.before {
+      background: rgba(239, 68, 68, 0.06);
+      border: 1px solid rgba(239, 68, 68, 0.15);
+    }
+
+    .compare-box.after {
+      background: rgba(34, 197, 94, 0.06);
+      border: 1px solid rgba(34, 197, 94, 0.15);
+    }
+
+    .compare-divider {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 20px;
+    }
+
+    .compare-divider span {
+      font-size: 28px;
+      color: var(--accent);
+      animation: arrowPulse 2s ease-in-out infinite;
+    }
+
+    .compare-title {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+
+    .compare-box.before .compare-title {
+      color: var(--red);
+    }
+
+    .compare-box.after .compare-title {
+      color: var(--green);
+    }
+
+    .compare-item {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 8px;
+      line-height: 1.5;
+      display: flex;
+      align-items: flex-start;
+      gap: 6px;
+    }
+
+    .compare-item .ci-icon {
+      flex-shrink: 0;
+    }
+
+    .divider {
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.3), transparent);
+      margin: 48px 0;
+      opacity: 0;
+      transform: scaleX(0);
+      transition: opacity 0.6s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .divider.revealed {
+      opacity: 1;
+      transform: scaleX(1);
+    }
+
+    /* Validation checklist */
+    .validation-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 14px;
+    }
+
+    .val-card {
+      background: var(--card-alt);
+      border-radius: 12px;
+      padding: 18px;
+      text-align: center;
+      border: 1px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .val-card:hover {
+      border-color: var(--accent3);
+      transform: translateY(-2px);
+    }
+
+    .val-icon {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+
+    .val-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: 4px;
+    }
+
+    .val-desc {
+      font-size: 10px;
+      color: var(--muted);
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        color: #1a1a1a;
+      }
+
+      .card {
+        border: 1px solid #ddd;
+        box-shadow: none;
+      }
+
+      .hero h1 {
+        -webkit-text-fill-color: #1a1a1a;
+      }
+
+      .kpi-value {
+        -webkit-text-fill-color: #1a1a1a;
+      }
+    }
+
+    @media (max-width: 1100px) {
+      .kpi-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+
+      .insight-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .validation-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 900px) {
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .grid-2,
+      .grid-3,
+      .grid-2-1,
+      .grid-1-2 {
+        grid-template-columns: 1fr;
+      }
+
+      .hero h1 {
+        font-size: 30px;
+      }
+
+      .flow {
+        flex-direction: column;
+      }
+
+      .flow-arrow {
+        transform: rotate(90deg);
+      }
+
+      .compare-grid {
+        grid-template-columns: 1fr;
+        gap: 16px;
+      }
+
+      .compare-divider {
+        padding: 8px 0;
+      }
+
+      .compare-divider span {
+        transform: rotate(90deg);
+      }
+    }
+
+    /* === ENHANCED TRANSITIONS & ANIMATIONS === */
+
+    /* Floating particles */
+    .particles {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 3px;
+      height: 3px;
+      background: rgba(59, 130, 246, 0.3);
+      border-radius: 50%;
+      animation: float linear infinite;
+    }
+
+    @keyframes float {
+      0% {
+        transform: translateY(100vh) rotate(0deg);
+        opacity: 0;
+      }
+
+      10% {
+        opacity: 1;
+      }
+
+      90% {
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(-20vh) rotate(720deg) scale(1.5);
+        opacity: 0;
+      }
+    }
+
+    /* KPI value count-up */
+    .kpi-value {
+      background: linear-gradient(135deg, #fff 0%, var(--accent) 50%, #fff 100%);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 5s ease-in-out infinite;
+    }
+
+    /* KPI icon bounce */
+    .kpi-icon {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .kpi-card:hover .kpi-icon {
+      transform: scale(1.2) rotate(-5deg);
+    }
+
+    /* KPI sub badge shimmer */
+    .kpi-sub {
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .kpi-card:hover .kpi-sub {
+      transform: scale(1.05);
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Contact card enhanced */
+    .contact-card {
+      transition: all 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .contact-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-6px) scale(1.02);
+      box-shadow: 0 12px 40px rgba(59, 130, 246, 0.15);
+    }
+
+    .contact-icon {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .contact-card:hover .contact-icon {
+      transform: scale(1.25) rotate(-8deg);
+    }
+
+    /* SOP step animation */
+    .sop-step {
+      transition: transform 0.3s ease, background 0.3s ease;
+      border-radius: 10px;
+      padding: 4px;
+    }
+
+    .sop-step:hover {
+      transform: translateX(6px);
+      background: rgba(59, 130, 246, 0.04);
+    }
+
+    .sop-num {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    }
+
+    .sop-step:hover .sop-num {
+      transform: scale(1.15) rotate(-5deg);
+      box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+    }
+
+    /* Timeline item animation */
+    .timeline-item {
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .timeline-item:hover {
+      background: rgba(59, 130, 246, 0.1);
+      transform: translateX(6px);
+    }
+
+    .timeline-item::before {
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+    }
+
+    .timeline-item:hover::before {
+      transform: scale(1.3);
+      box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+    }
+
+    /* Insight cards */
+    .insight-card {
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .insight-card:hover {
+      border-color: rgba(139, 92, 246, 0.3);
+      transform: translateY(-4px) scale(1.03);
+      box-shadow: 0 8px 30px rgba(139, 92, 246, 0.1);
+    }
+
+    .insight-value {
+      transition: transform 0.3s ease;
+    }
+
+    .insight-card:hover .insight-value {
+      transform: scale(1.1);
+    }
+
+    /* Validation cards */
+    .val-card {
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .val-card:hover {
+      border-color: var(--accent3);
+      transform: translateY(-4px);
+      box-shadow: 0 8px 25px rgba(6, 182, 212, 0.12);
+    }
+
+    .val-icon {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .val-card:hover .val-icon {
+      transform: scale(1.3) rotate(10deg);
+    }
+
+    /* Compare boxes */
+    .compare-box {
+      transition: all 0.4s ease;
+    }
+
+    .compare-box:hover {
+      transform: scale(1.02);
+    }
+
+    /* Callout animation */
+    .callout {
+      transition: all 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    }
+
+    .callout:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    .callout-icon {
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .callout:hover .callout-icon {
+      transform: scale(1.2) rotate(-10deg);
+    }
+
+    /* Savings box glow */
+    .savings-box {
+      transition: all 0.4s ease;
+    }
+
+    .savings-box:hover {
+      box-shadow: 0 0 40px rgba(34, 197, 94, 0.15);
+      transform: scale(1.02);
+    }
+
+    /* Smooth scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--bg);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: linear-gradient(180deg, var(--accent), var(--accent2));
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--accent);
+    }
+
+    /* Effort bar enhanced */
+    .effort-fill {
+      position: relative;
+      overflow: hidden;
+    }
+
+    .effort-fill::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 50%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      animation: barShine 3s ease-in-out infinite;
+    }
+
+    @keyframes barShine {
+      0% {
+        left: -100%;
+      }
+
+      50% {
+        left: 150%;
+      }
+
+      100% {
+        left: 150%;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-badge">EUIT TOWER • SNAPLOGIC TEAM</div>
+      <h1>Vendor Repush Automation</h1>
+      <div class="subtitle">System Transformation & Management Handover</div>
+      <div class="date">Operational Period: March 2025 – March 2026 · Presented by: EUIT SnapLogic Team</div>
+    </div>
+
+    <!-- ===== SECTION 1: KPI OVERVIEW ===== -->
+    <div class="section">
+      <span class="section-label">Key Performance Indicators</span>
+      <h2 class="section-title">High-Level Overview</h2>
+      <div class="kpi-grid" style="grid-template-columns:repeat(6,1fr);">
+        <div class="card kpi-card">
+          <div class="kpi-icon blue">📊</div>
+          <div class="kpi-value">1,630</div>
+          <div class="kpi-label">Snaplogic worked Incident (12 Months)</div>
+          <div class="kpi-sub up">▲ Q4 Peak: 880 (54%)</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon green">🆕</div>
+          <div class="kpi-value">978</div>
+          <div class="kpi-label">Actual Incident</div>
+          <div class="kpi-sub neutral">60% of total volume</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon red">🔄</div>
+          <div class="kpi-value">652</div>
+          <div class="kpi-label">Recurring Incidents</div>
+          <div class="kpi-sub up">40% of total volume</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon purple">⏱️</div>
+          <div class="kpi-value">48 hrs</div>
+          <div class="kpi-label">Avg. Resolution Time</div>
+          <div class="kpi-sub up">▲ Across 4 teams</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon amber">⚡</div>
+          <div class="kpi-value">78,240</div>
+          <div class="kpi-label">Team-Hours / Year</div>
+          <div class="kpi-sub neutral">1,630 × 48 hrs each</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon cyan">💡</div>
+          <div class="kpi-value">31,296</div>
+          <div class="kpi-label">Hours Saveable / Year (EUIT SnapLogic team)</div>
+          <div class="kpi-sub down">▼ 40% reduction possible</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 2: BEFORE vs AFTER ===== -->
+    <div class="section">
+      <span class="section-label">Transformation</span>
+      <h2 class="section-title">Before vs. After Automation</h2>
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="compare-grid">
+          <div class="compare-box before">
+            <div class="compare-title">❌ Previous Workflow</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Genpact raised individual tickets for every repush
+            </div>
+            <div class="compare-item"><span class="ci-icon">•</span> SnapLogic processed each ticket manually (15–20
+              min)</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Response often delayed to next business day</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Single PRID per request only</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Full dependency on EUIT SnapLogic team availability
+            </div>
+            <div class="compare-item"><span class="ci-icon">•</span> Manual timestamp retrieval and sharing</div>
+          </div>
+          <div class="compare-divider"><span>→</span></div>
+          <div class="compare-box after">
+            <div class="compare-title">✅ Current Automated Workflow</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Self-service trigger via web application</div>
+            <div class="compare-item"><span class="ci-icon">•</span> SnapLogic pipeline executes automatically (~5 min)
+            </div>
+            <div class="compare-item"><span class="ci-icon">•</span> Near-real-time processing, no waiting</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Multi-PRID batch processing supported</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Dependency-free, operator-driven execution</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Auto-retrieval of vendor push timestamps</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success" style="margin-top:20px;">
+        <div class="callout-icon">✅</div>
+        <div class="callout-text">
+          <h3>Automation ROI</h3>
+          <p>Per-ticket handling reduced from 15–20 minutes (+ next-day lag) to ~5 minutes of automated
+            processing.<br />
+            EUIT SnapLogic team freed from 7–8 daily manual repush tasks, enabling focus on higher-value integration
+            work.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 3: SYSTEM FLOW ===== -->
+    <div class="section">
+      <span class="section-label">Architecture</span>
+      <h2 class="section-title">End-to-End Data & System Flow</h2>
+      <div class="card">
+        <div class="flow">
+          <div class="flow-node">
+            <div class="node-icon">👤</div>
+            <div class="node-label">Workday</div>
+            <div class="node-sub">Banking Details<br>Source of Record</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="node-icon">❄️</div>
+            <div class="node-label">Snowflake</div>
+            <div class="node-sub">HR RAW Model<br>1-hr Full Refresh</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="node-icon">⚙️</div>
+            <div class="node-label">SnapLogic</div>
+            <div class="node-sub">Pipeline Orchestration<br>Data Transform</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="node-icon">🔗</div>
+            <div class="node-label">SAP PI</div>
+            <div class="node-sub">Vendor Ingestion<br>& Validation</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-node">
+            <div class="node-icon">💰</div>
+            <div class="node-label">SAP FI</div>
+            <div class="node-sub">Financial Record<br>Final Review</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Validation criteria -->
+      <div style="margin-top:22px;">
+        <div class="card">
+          <div class="card-title"><span class="dot cyan"></span> Bank Detail Validation Criteria (Step 3 – SnapLogic)
+          </div>
+          <div class="validation-grid">
+            <div class="val-card">
+              <div class="val-icon">🔢</div>
+              <div class="val-label">Account Number</div>
+              <div class="val-desc">Must be exactly 17 characters</div>
+            </div>
+            <div class="val-card">
+              <div class="val-icon">🏦</div>
+              <div class="val-label">IBAN</div>
+              <div class="val-desc">Must not be null</div>
+            </div>
+            <div class="val-card">
+              <div class="val-icon">📋</div>
+              <div class="val-label">IFSC Code</div>
+              <div class="val-desc">Must not be null</div>
+            </div>
+            <div class="val-card">
+              <div class="val-icon">✅</div>
+              <div class="val-label">All Mandatory Fields</div>
+              <div class="val-desc">Must be populated</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 4: INCIDENT ANALYTICS ===== -->
+    <div class="section">
+      <span class="section-label">Incident Analytics</span>
+      <h2 class="section-title">Trends, Patterns & Root Causes</h2>
+
+      <div class="grid-2-1">
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span> Monthly Incident Volume (Mar '25 – Mar '26)</div>
+          <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span> New vs. Recurring</div>
+          <div class="chart-container-sm">
+            <canvas id="compositionChart"></canvas>
+          </div>
+          <div style="text-align:center;margin-top:14px;">
+            <div style="font-size:11px;color:var(--muted);">
+              <span style="color:var(--accent);font-weight:600;">978</span> New (60%) ·
+              <span style="color:var(--red);font-weight:600;">652</span> Recurring (40%)
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Root cause analysis -->
+      <div class="grid-2" style="margin-top:22px;">
+        <div class="card">
+          <div class="card-title"><span class="dot red"></span> Recurring Incident Root Causes</div>
+          <div class="chart-container-md">
+            <canvas id="rootCauseChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot amber"></span> Quarterly Volume Distribution</div>
+          <div class="chart-container-md">
+            <canvas id="quarterlyChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily pattern insight -->
+      <div class="insight-grid">
+        <div class="insight-card">
+          <div class="insight-value amber">7–8</div>
+          <div class="insight-label">Avg. daily tickets raised</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-value red">4–5</div>
+          <div class="insight-label">New tickets/day (60–65%)</div>
+        </div>
+        <div class="insight-card">
+          <div class="insight-value blue">2–3</div>
+          <div class="insight-label">Recurring tickets/day (35–40%)</div>
+        </div>
+      </div>
+
+      <div class="callout warning" style="margin-top:22px;">
+        <div class="callout-icon">⚠️</div>
+        <div class="callout-text">
+          <h3>Q4 Demand Surge – 3× Baseline Volume</h3>
+          <p>Oct–Dec 2025 accounted for <strong>880 incidents (54%)</strong> of annual volume. Driven by year-end vendor
+            payment deadlines and banking detail update surges. Proactive data cleansing in September is critical to
+            mitigate Q4 overload.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 5: TEAM EFFORT & FINANCIALS ===== -->
+    <div class="section">
+      <span class="section-label">Resource Allocation</span>
+      <h2 class="section-title">Team Effort Distribution & Cost Impact</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span class="dot cyan"></span> Effort Distribution Across Teams</div>
+          <div class="chart-container-sm">
+            <canvas id="effortChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span> Operational Hours Breakdown</div>
+          <div style="padding:10px 0;">
+            <div class="effort-bar-container">
+              <div class="effort-label"><span>SnapLogic (Pipeline & Verification)</span><span
+                  style="color:var(--accent);">50% · 39,120 hrs/yr</span></div>
+              <div class="effort-bar">
+                <div class="effort-fill" data-width="50"
+                  style="background:linear-gradient(90deg,var(--accent),var(--accent2));"></div>
+              </div>
+            </div>
+            <div class="effort-bar-container">
+              <div class="effort-label"><span>SAP PI + SAP FI (Validation & Review)</span><span
+                  style="color:var(--amber);">40% · 31,296 hrs/yr</span></div>
+              <div class="effort-bar">
+                <div class="effort-fill" data-width="40"
+                  style="background:linear-gradient(90deg,var(--amber),#f97316);"></div>
+              </div>
+            </div>
+            <div class="effort-bar-container">
+              <div class="effort-label"><span>Genpact (Initiation & Closure)</span><span style="color:var(--green);">10%
+                  · 7,824 hrs/yr</span></div>
+              <div class="effort-bar">
+                <div class="effort-fill" data-width="10"
+                  style="background:linear-gradient(90deg,var(--green),var(--accent3));"></div>
+              </div>
+            </div>
+          </div>
+          <div class="savings-box">
+            <div class="savings-value">31,296 hrs/yr</div>
+            <div class="savings-label">Potential annual savings by eliminating 652 recurring incidents through upstream
+              data governance</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Impact metrics -->
+      <div class="card" style="margin-top:22px;">
+        <div class="card-title"><span class="dot red"></span> Business Impact of Current Gaps</div>
+        <div class="insight-grid" style="margin-top:0;">
+          <div class="insight-card">
+            <div class="insight-value red">48 hrs</div>
+            <div class="insight-label">Avg. end-to-end resolution across 4 teams — vendor payments delayed by 2 business
+              days</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value amber">54%</div>
+            <div class="insight-label">Of annual incidents concentrated in Q4 — no surge-capacity runbook exists</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value green">~5 min</div>
+            <div class="insight-label">Post-automation pipeline processing time — down from 15–20 min manual + next-day
+              delay</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 5B: SNAPLOGIC EFFORT & TIME SAVINGS ===== -->
+    <div class="section">
+      <span class="section-label">SnapLogic Focus</span>
+      <h2 class="section-title">EUIT SnapLogic — Effort Analysis & Time Savings</h2>
+
+      <!-- SnapLogic KPIs -->
+      <div class="kpi-grid" style="grid-template-columns:repeat(4,1fr);">
+        <div class="card kpi-card">
+          <div class="kpi-icon blue">⏱️</div>
+          <div class="kpi-value">543</div>
+          <div class="kpi-label">Manual Hours Saved / Year</div>
+          <div class="kpi-sub down">▼ 1,630 tickets × 20 min</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon purple">🚀</div>
+          <div class="kpi-value">7–8</div>
+          <div class="kpi-label">Daily Manual Tasks Eliminated</div>
+          <div class="kpi-sub down">▼ Now fully automated</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon cyan">⚡</div>
+          <div class="kpi-value">96%</div>
+          <div class="kpi-label">Response Time Improvement</div>
+          <div class="kpi-sub down">▼ 24 hrs → ~5 min</div>
+        </div>
+        <div class="card kpi-card">
+          <div class="kpi-icon amber">💰</div>
+          <div class="kpi-value">39,120</div>
+          <div class="kpi-label">Total SnapLogic Hrs / Year</div>
+          <div class="kpi-sub neutral">50% of all team effort</div>
+        </div>
+      </div>
+
+      <!-- Before / After SnapLogic -->
+      <div class="card" style="padding:0;overflow:hidden;margin-top:20px;">
+        <div class="compare-grid">
+          <div class="compare-box before">
+            <div class="compare-title">❌ SnapLogic Before Automation</div>
+            <div class="compare-item"><span class="ci-icon">•</span> 15–20 min manual effort per ticket</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Next-day response turnaround</div>
+            <div class="compare-item"><span class="ci-icon">•</span> 7–8 tickets processed manually daily</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Single PRID per request</div>
+            <div class="compare-item"><span class="ci-icon">•</span> ~543 hrs/year on manual repush tasks</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Team a bottleneck for Genpact operations</div>
+          </div>
+          <div class="compare-divider"><span>→</span></div>
+          <div class="compare-box after">
+            <div class="compare-title">✅ SnapLogic After Automation</div>
+            <div class="compare-item"><span class="ci-icon">•</span> ~5 min automated pipeline execution</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Real-time response (no wait)</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Zero manual tickets — fully self-service</div>
+            <div class="compare-item"><span class="ci-icon">•</span> Multi-PRID batch in a single request</div>
+            <div class="compare-item"><span class="ci-icon">•</span> ~407 hrs/year redirected to pipeline optimization
+            </div>
+            <div class="compare-item"><span class="ci-icon">•</span> Team focused on higher-value integration work</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts row -->
+      <div class="grid-2" style="margin-top:22px;">
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span> SnapLogic Monthly Time Savings (Hours Saved)</div>
+          <div class="chart-container-md">
+            <canvas id="snapTimeSavingsChart"></canvas>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot purple"></span> SnapLogic Effort Breakdown</div>
+          <div class="chart-container-md">
+            <canvas id="snapEffortBreakdownChart"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <!-- SnapLogic detailed metrics -->
+      <div class="card" style="margin-top:22px;">
+        <div class="card-title"><span class="dot cyan"></span> SnapLogic Savings — Detailed Metrics</div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
+          <div class="insight-card">
+            <div class="insight-value green">32,600</div>
+            <div class="insight-label">Total minutes saved per year<br>(1,630 × 20 min)</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value blue">543 hrs</div>
+            <div class="insight-label">Direct manual effort eliminated<br>(repush task automation)</div>
+          </div>
+          <div class="insight-card">
+            <div class="insight-value green">39,120 hrs</div>
+            <div class="insight-label">Total SnapLogic annual load (50%)<br>Focus: pipeline & verification</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="callout success" style="margin-top:20px;">
+        <div class="callout-icon">✅</div>
+        <div class="callout-text">
+          <h3 style="margin-bottom: 12px;">SnapLogic Automation Impact Summary</h3>
+          <p>By automating the vendor repush process, SnapLogic eliminated <strong>543 hours/year</strong> of manual
+            ticket processing and removed an average <strong>24-hour response lag</strong> from every request.</p>
+          <p style="margin-top: 12px;">The team now processes the same 1,630 annual tickets in <strong>~136 hours of
+              automated pipeline time</strong> (1,630 &times; 5 min), freeing <strong>407 hours annually</strong> for
+            higher-value integration development and pipeline optimization.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 6: MILESTONES & RISKS ===== -->
+    <div class="section">
+      <span class="section-label">Status Overview</span>
+      <h2 class="section-title">Project Milestones & Risk Register</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span class="dot green"></span> Completed & Pending Milestones</div>
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-text">Vendor creation workflow operationalized across 4 teams</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">Snowflake HR RAW data cache (1-hr full refresh)</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">Self-service vendor repush application deployed</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">Multi-PRID batch processing capability</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">Bank-detail validation logic (17-char Acct, IBAN, IFSC)</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">Auto-retrieval of vendor push timestamps</div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-text">SnapLogic automated pipeline to SAP PI</div>
+            </div>
+            <div class="timeline-item pending">
+              <div class="timeline-text">Recurring incident root-cause resolution (652 tickets)</div>
+            </div>
+            <div class="timeline-item pending">
+              <div class="timeline-text">Preventive validation controls at Workday entry</div>
+            </div>
+            <div class="timeline-item pending">
+              <div class="timeline-text">Q4 surge-capacity runbook & SLA formalization</div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot red"></span> Risk Register — Immediate Attention</div>
+          <div class="risk-item critical">
+            <div class="risk-level critical">🔴 CRITICAL</div>
+            <div class="risk-title">40% Recurring Incidents Unresolved</div>
+            <div class="risk-desc">SAP bank-detail validation failures, STOP table entries, and leave/termination
+              statuses cause daily ticket recurrence.</div>
+            <div class="risk-action">→ Fix: Upstream Workday validation + auto-STOP table clearance</div>
+          </div>
+          <div class="risk-item critical">
+            <div class="risk-level critical">🔴 CRITICAL</div>
+            <div class="risk-title">Q4 Volume Surge — No Preparedness</div>
+            <div class="risk-desc">Oct–Dec: 880 incidents with no documented surge-capacity plan or pre-positioned
+              resources.</div>
+            <div class="risk-action">→ Fix: September data cleansing drive + Q4 runbook</div>
+          </div>
+          <div class="risk-item high">
+            <div class="risk-level high">🟡 HIGH</div>
+            <div class="risk-title">48-Hour Resolution Time</div>
+            <div class="risk-desc">Sequential 4-team handoff with no SLA targets or parallel processing.</div>
+            <div class="risk-action">→ Fix: Per-team SLA (4hr SnapLogic / 8hr SAP) + auto-escalation</div>
+          </div>
+          <div class="risk-item medium">
+            <div class="risk-level medium">🔵 MEDIUM</div>
+            <div class="risk-title">SnapLogic Data Visibility Gap</div>
+            <div class="risk-desc">Cannot view bank details directly — relies on HR RAW for diagnosis.</div>
+            <div class="risk-action">→ Fix: Read-only masked bank view for support</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 7: STAKEHOLDERS ===== -->
+    <div class="section">
+      <span class="section-label">Directory</span>
+      <h2 class="section-title">Stakeholder & Vendor Directory</h2>
+      <div class="contact-grid">
+        <div class="contact-card">
+          <div class="contact-icon">🏢</div>
+          <div class="contact-name">Genpact</div>
+          <div class="contact-role">Ticket creation, initiation, user follow-up & final closure</div>
+          <div class="contact-group">10% of effort</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">⚙️</div>
+          <div class="contact-name">EUIT SnapLogic</div>
+          <div class="contact-role">HR RAW data retrieval, bank-detail verification, vendor push pipeline execution
+          </div>
+          <div class="contact-group">AppSupport-EU-Integration</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🔗</div>
+          <div class="contact-name">SAP PI</div>
+          <div class="contact-role">Vendor data ingestion, middleware validation & receipt confirmation</div>
+          <div class="contact-group">Appsupport-ECS-SAP-Integrations</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">💰</div>
+          <div class="contact-name">SAP FI</div>
+          <div class="contact-role">Final financial review, STOP table management & ticket status update</div>
+          <div class="contact-group">AppSupport-ECS-SAP-FI</div>
+        </div>
+        <div class="contact-card">
+          <div class="contact-icon">🗄️</div>
+          <div class="contact-name">HR RAW</div>
+          <div class="contact-role">Snowflake data integrity, Workday source-of-truth, data issue resolution</div>
+          <div class="contact-group">HREUITDataSupport@astrazeneca.com</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 8: SOPs ===== -->
+    <div class="section">
+      <span class="section-label">Procedures</span>
+      <h2 class="section-title">Standard Operating Procedures & Escalation</h2>
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><span class="dot blue"></span> Vendor Creation Workflow</div>
+          <div class="sop-step">
+            <div class="sop-num">1</div>
+            <div class="sop-content"><strong>Ticket Creation</strong><span>Genpact creates vendor creation ticket and
+                routes to SnapLogic</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">2</div>
+            <div class="sop-content"><strong>Data Retrieval & Validation</strong><span>SnapLogic fetches bank details
+                from Snowflake HR RAW; validates Acct No (17 chars), IBAN, IFSC, mandatory fields</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">3</div>
+            <div class="sop-content"><strong>User Follow-Up (if needed)</strong><span>If validation fails → contact user
+                to update Workday → wait for HR RAW refresh (up to 1 hr) → re-verify</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">4</div>
+            <div class="sop-content"><strong>Vendor Push</strong><span>After validation, SnapLogic creates the vendor
+                and generates a timestamp, which Genpact shares with SAP PI.</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">5</div>
+            <div class="sop-content"><strong>SAP PI Verification</strong><span>SAP PI validates vendor data ingestion
+                and confirms receipt</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">6</div>
+            <div class="sop-content"><strong>SAP FI Review & Closure</strong><span>SAP FI performs final financial
+                review → Genpact closes ticket</span></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><span class="dot amber"></span> Escalation Matrix</div>
+          <div class="risk-item high" style="border-left-color:var(--red);">
+            <div class="risk-title">User in STOP Table</div>
+            <div class="risk-desc">Remove from STOP table and repush vendor creation</div>
+            <div class="risk-action">→ Escalate to: SAP FI Team</div>
+          </div>
+          <div class="risk-item high" style="border-left-color:var(--amber);">
+            <div class="risk-title">SAP Bank Validation Failure</div>
+            <div class="risk-desc">Contact user to correct bank details in Workday; re-verify after HR RAW refresh</div>
+            <div class="risk-action">→ Escalate to: Genpact → End User</div>
+          </div>
+          <div class="risk-item high" style="border-left-color:var(--accent2);">
+            <div class="risk-title">User on Leave / Termination</div>
+            <div class="risk-desc">Verify employment status; coordinate with HR for resolution</div>
+            <div class="risk-action">→ Escalate to: HR RAW Team</div>
+          </div>
+          <div class="risk-item high" style="border-left-color:var(--accent3);">
+            <div class="risk-title">HR RAW Data Discrepancy</div>
+            <div class="risk-desc">SnapLogic cannot view bank details; escalate with SAP failure comments</div>
+            <div class="risk-action">→ Escalate to: HREUITDataSupport@astrazeneca.com</div>
+          </div>
+          <div class="risk-item high" style="border-left-color:var(--muted);">
+            <div class="risk-title">Vendor Push Timestamp Unavailable</div>
+            <div class="risk-desc">Wait 5 minutes and retry; if persistent, contact SnapLogic support</div>
+            <div class="risk-action">→ Escalate to: azeusnaplogicsupport@astrazeneca.com</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- ===== SECTION 9: TRANSITION ===== -->
+    <div class="section">
+      <span class="section-label">Handover</span>
+      <h2 class="section-title">Transition</h2>
+      <div class="grid-2">
+        <div class="card" style="border-top:3px solid var(--accent);">
+          <div class="card-title"><span class="dot blue"></span> Knowledge Transfer Checklist</div>
+          <div class="sop-step">
+            <div class="sop-num">1</div>
+            <div class="sop-content"><strong>System Access & Credentials</strong><span>Ensure new team has access to
+                SnapLogic pipelines, Snowflake HR RAW, SAP PI/FI assignment groups, and the self-service vendor repush
+                application</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">2</div>
+            <div class="sop-content"><strong>Workflow Familiarization</strong><span>Walk through end-to-end vendor
+                creation flow (Workday → Snowflake → SnapLogic → SAP PI → SAP FI) with hands-on demonstration</span>
+            </div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">3</div>
+            <div class="sop-content"><strong>Escalation Contacts</strong><span>Confirm all team contacts, DLs
+                (SnapLogic: azeusnaplogicsupport@astrazeneca.com, HR RAW: HREUITDataSupport@astrazeneca.com) and
+                assignment groups</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">4</div>
+            <div class="sop-content"><strong>SOP & Escalation Matrix</strong><span>Review vendor creation SOP,
+                self-service repush procedure, and escalation matrix for STOP table, bank validation, leave/termination
+                failures</span></div>
+          </div>
+          <div class="sop-step">
+            <div class="sop-num">5</div>
+            <div class="sop-content"><strong>Risk Awareness</strong><span>Brief on recurring incident patterns (40%), Q4
+                volume surge (3× baseline), 48-hr resolution cycle, and HR RAW data refresh limitations</span></div>
+          </div>
+        </div>
+        <div class="card" style="border-top:3px solid var(--accent2);">
+          <div class="card-title"><span class="dot purple"></span> Transition Readiness</div>
+          <div style="margin-bottom:18px;">
+            <div class="risk-item medium" style="border-left-color:var(--green);">
+              <div class="risk-level" style="color:var(--green);">✅ READY</div>
+              <div class="risk-title">Automation Pipeline</div>
+              <div class="risk-desc">Fully operational — self-service vendor repush with multi-PRID batch processing,
+                auto-timestamp retrieval</div>
+            </div>
+            <div class="risk-item medium" style="border-left-color:var(--green);">
+              <div class="risk-level" style="color:var(--green);">✅ READY</div>
+              <div class="risk-title">SOPs Documented</div>
+              <div class="risk-desc">End-to-end workflow, self-service procedure, and escalation matrix fully documented
+              </div>
+            </div>
+            <div class="risk-item medium" style="border-left-color:var(--green);">
+              <div class="risk-level" style="color:var(--green);">✅ READY</div>
+              <div class="risk-title">Stakeholder Directory</div>
+              <div class="risk-desc">All 5 teams mapped with roles, assignment groups, and contact DLs</div>
+            </div>
+            <div class="risk-item medium" style="border-left-color:var(--amber);">
+              <div class="risk-level high">⚠️ ATTENTION NEEDED</div>
+              <div class="risk-title">Recurring Incidents (652)</div>
+              <div class="risk-desc">40% of tickets recur due to upstream data issues — requires ongoing monitoring and
+                root-cause remediation</div>
+            </div>
+            <div class="risk-item medium" style="border-left-color:var(--amber);">
+              <div class="risk-level high">⚠️ ATTENTION NEEDED</div>
+              <div class="risk-title">Q4 Surge Preparedness</div>
+              <div class="risk-desc">Oct–Dec sees 3× volume — new team must plan capacity and data cleansing by
+                September</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div style="text-align:center;padding:40px 0 20px;color:var(--muted);font-size:12px;">
+      <p>Vendor Repush Automation — Management Handover Dashboard</p>
+      <p style="margin-top:6px;color:var(--accent);font-weight:600;letter-spacing:1.5px;font-size:11px;">EUIT TOWER •
+        EUIT SnapLogic team</p>
+      <p style="margin-top:6px;opacity:0.5;">All data sourced from operational records · March 2025 – March 2026</p>
+    </div>
+  </div>
+
+  <script>
+    Chart.defaults.color = '#94a3b8';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.04)';
+    Chart.defaults.font.family = 'Inter';
+
+    const tooltipStyle = {
+      backgroundColor: '#1e293b',
+      titleColor: '#fff',
+      bodyColor: '#94a3b8',
+      borderColor: 'rgba(59,130,246,0.3)',
+      borderWidth: 1,
+      cornerRadius: 8,
+      padding: 12,
+    };
+
+    // 1. Monthly Incidents Chart
+    const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+    new Chart(monthlyCtx, {
+      type: 'bar',
+      data: {
+        labels: ['Mar 25', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan 26', 'Feb', 'Mar 26'],
+        datasets: [{
+          label: 'Actual (~60%)',
+          data: [23, 30, 41, 31, 42, 59, 72, 198, 176, 152, 52, 38, 52],
+          backgroundColor: 'rgba(59,130,246,0.6)',
+          borderColor: '#3b82f6',
+          borderWidth: 1, borderRadius: 4, borderSkipped: false,
+        }, {
+          label: 'Recurring (~40%)',
+          data: [15, 20, 28, 20, 28, 40, 48, 132, 118, 101, 34, 26, 34],
+          backgroundColor: 'rgba(239,68,68,0.6)',
+          borderColor: '#ef4444',
+          borderWidth: 1, borderRadius: 4, borderSkipped: false,
+        }, {
+          label: 'Total Trend',
+          data: [38, 50, 68, 51, 70, 99, 119, 312, 301, 267, 86, 64, 105],
+          type: 'line',
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#f59e0b',
+          tension: 0.4, yAxisID: 'y',
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: tooltipStyle },
+        scales: {
+          y: { stacked: true, beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+          x: { stacked: true, grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // 2. New vs Recurring Doughnut
+    new Chart(document.getElementById('compositionChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Actual Incident (978)', 'Recurring Incidents (652)'],
+        datasets: [{ data: [978, 652], backgroundColor: ['rgba(59,130,246,0.7)', 'rgba(239,68,68,0.7)'], borderColor: ['#3b82f6', '#ef4444'], borderWidth: 2, hoverOffset: 8 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '65%',
+        plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: tooltipStyle }
+      }
+    });
+
+    // 3. Root Cause Horizontal Bar
+    new Chart(document.getElementById('rootCauseChart'), {
+      type: 'bar',
+      data: {
+        labels: ['SAP Bank Validation\nFailure', 'User in\nSTOP Table', 'User on Leave\nStatus', 'User on Termination\nStatus', 'Other Data\nIssues'],
+        datasets: [{
+          label: 'Est. Incidents',
+          data: [290, 150, 90, 64, 50],
+          backgroundColor: ['rgba(239,68,68,0.6)', 'rgba(245,158,11,0.6)', 'rgba(139,92,246,0.6)', 'rgba(6,182,212,0.6)', 'rgba(100,116,139,0.6)'],
+          borderColor: ['#ef4444', '#f59e0b', '#8b5cf6', '#06b6d4', '#64748b'],
+          borderWidth: 1, borderRadius: 6,
+        }]
+      },
+      options: {
+        indexAxis: 'y',
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false }, tooltip: tooltipStyle },
+        scales: {
+          x: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+          y: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // 4. Quarterly Volume
+    new Chart(document.getElementById('quarterlyChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Q1 2025\n(Mar)', 'Q2 2025\n(Apr-Jun)', 'Q3 2025\n(Jul-Sep)', 'Q4 2025\n(Oct-Dec)', 'Q1 2026\n(Jan-Mar)'],
+        datasets: [{
+          label: 'Incidents',
+          data: [38, 169, 288, 880, 255],
+          backgroundColor: ['rgba(59,130,246,0.6)', 'rgba(139,92,246,0.6)', 'rgba(239,68,68,0.7)', 'rgba(245,158,11,0.6)', 'rgba(59,130,246,0.6)'],
+          borderColor: ['#3b82f6', '#8b5cf6', '#ef4444', '#f59e0b', '#3b82f6'],
+          borderWidth: 1, borderRadius: 8,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: tooltipStyle,
+        },
+        scales: {
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // 5. Effort Polar Area
+    new Chart(document.getElementById('effortChart'), {
+      type: 'polarArea',
+      data: {
+        labels: ['SnapLogic (50%)', 'SAP PI + FI (40%)', 'Genpact (10%)'],
+        datasets: [{ data: [50, 40, 10], backgroundColor: ['rgba(59,130,246,0.5)', 'rgba(245,158,11,0.5)', 'rgba(34,197,94,0.5)'], borderColor: ['#3b82f6', '#f59e0b', '#22c55e'], borderWidth: 2 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: tooltipStyle },
+        scales: { r: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { display: false } } }
+      }
+    });
+
+    // 6. SnapLogic Monthly Time Savings
+    const monthlyIncidents = [38, 50, 69, 51, 70, 99, 120, 330, 294, 253, 86, 64, 86];
+    const monthlyHoursSaved = monthlyIncidents.map(v => Math.round(v * 20 / 60 * 10) / 10);
+    const monthlyAutoTime = monthlyIncidents.map(v => Math.round(v * 5 / 60 * 10) / 10);
+    new Chart(document.getElementById('snapTimeSavingsChart'), {
+      type: 'bar',
+      data: {
+        labels: ['Mar 25', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan 26', 'Feb', 'Mar 26'],
+        datasets: [{
+          label: 'Manual Hours Saved',
+          data: monthlyHoursSaved,
+          backgroundColor: 'rgba(34,197,94,0.6)',
+          borderColor: '#22c55e',
+          borderWidth: 1, borderRadius: 4,
+        }, {
+          label: 'Automated Pipeline Time',
+          data: monthlyAutoTime,
+          backgroundColor: 'rgba(59,130,246,0.6)',
+          borderColor: '#3b82f6',
+          borderWidth: 1, borderRadius: 4,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'top', labels: { padding: 14, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } } }, tooltip: tooltipStyle },
+        scales: {
+          y: { beginAtZero: true, title: { display: true, text: 'Hours', color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { font: { size: 10 } } },
+          x: { grid: { display: false }, ticks: { font: { size: 10 } } }
+        }
+      }
+    });
+
+    // 7. SnapLogic Effort Breakdown Doughnut
+    new Chart(document.getElementById('snapEffortBreakdownChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Pipeline Execution & Monitoring', 'Data Retrieval & Validation', 'Incident Escalation & Handoff', 'Manual Tasks (Now Automated)'],
+        datasets: [{
+          data: [40, 30, 18, 12],
+          backgroundColor: ['rgba(59,130,246,0.7)', 'rgba(139,92,246,0.7)', 'rgba(245,158,11,0.7)', 'rgba(34,197,94,0.7)'],
+          borderColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#22c55e'],
+          borderWidth: 2, hoverOffset: 8,
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false, cutout: '60%',
+        plugins: {
+          legend: { position: 'bottom', labels: { padding: 12, usePointStyle: true, pointStyle: 'circle', font: { size: 10 } } },
+          tooltip: tooltipStyle
+        }
+      }
+    });
+
+    // === SCROLL REVEAL SYSTEM ===
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('revealed');
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    // Observe all sections and dividers
+    document.querySelectorAll('.section, .divider').forEach(el => revealObserver.observe(el));
+
+    // Animate effort bars on reveal
+    const effortObserver = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.querySelectorAll('.effort-fill').forEach(bar => { bar.style.width = bar.dataset.width + '%'; });
+        }
+      });
+    }, { threshold: 0.3 });
+    document.querySelectorAll('.effort-bar-container').forEach(el => {
+      const card = el.closest('.card');
+      if (card) effortObserver.observe(card);
+    });
+
+    // === 3D CARD TILT EFFECT ===
+    document.querySelectorAll('.card').forEach(card => {
+      card.addEventListener('mousemove', e => {
+        const rect = card.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const xPct = x / rect.width - 0.5;
+        const yPct = y / rect.height - 0.5;
+
+        // Enhance hover border and glow tracking mouse position
+        card.style.transform = `translateY(-4px) scale(1.01) perspective(1000px) rotateX(${yPct * -10}deg) rotateY(${xPct * 10}deg)`;
+        card.style.setProperty('--mouse-x', `${x}px`);
+        card.style.setProperty('--mouse-y', `${y}px`);
+        // We use pseudo element background positioning for dynamic glow
+        if (!card.querySelector('.glow-effect')) {
+          const glow = document.createElement('div');
+          glow.className = 'glow-effect';
+          glow.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:1;background:radial-gradient(800px circle at var(--mouse-x) var(--mouse-y), rgba(255,255,255,0.06), transparent 40%);transition:opacity 0.3s;opacity:1;';
+          card.appendChild(glow);
+        } else {
+          card.querySelector('.glow-effect').style.opacity = '1';
+        }
+      });
+
+      card.addEventListener('mouseleave', () => {
+        card.style.transform = '';
+        if (card.querySelector('.glow-effect')) {
+          card.querySelector('.glow-effect').style.opacity = '0';
+        }
+      });
+    });
+
+    // === FLOATING PARTICLES ===
+    const particlesContainer = document.createElement('div');
+    particlesContainer.className = 'particles';
+    document.body.prepend(particlesContainer);
+
+    for (let i = 0; i < 20; i++) {
+      const particle = document.createElement('div');
+      particle.className = 'particle';
+      particle.style.left = Math.random() * 100 + '%';
+      particle.style.animationDuration = (8 + Math.random() * 15) + 's';
+      particle.style.animationDelay = (Math.random() * 10) + 's';
+      particle.style.width = particle.style.height = (2 + Math.random() * 3) + 'px';
+      const colors = ['rgba(59,130,246,0.3)', 'rgba(139,92,246,0.25)', 'rgba(6,182,212,0.2)'];
+      particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+      particlesContainer.appendChild(particle);
+    }
+
+    // === COUNTUP ANIMATION FOR KPI VALUES ===
+    const countUpObserver = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting && !entry.target.dataset.counted) {
+          entry.target.dataset.counted = 'true';
+          const text = entry.target.textContent.trim();
+          // Only animate pure numbers
+          const clean = text.replace(/,/g, '');
+          const num = parseFloat(clean);
+          if (!isNaN(num) && num > 0 && !text.includes('hr') && !text.includes('%') && !text.includes('min') && !text.includes('–')) {
+            const duration = 1500;
+            const start = performance.now();
+            const hasComma = text.includes(',');
+            const step = (now) => {
+              const progress = Math.min((now - start) / duration, 1);
+              const eased = 1 - Math.pow(1 - progress, 3);
+              let current = Math.floor(eased * num);
+              if (hasComma) current = current.toLocaleString();
+              entry.target.textContent = current;
+              if (progress < 1) requestAnimationFrame(step);
+              else entry.target.textContent = text;
+            };
+            requestAnimationFrame(step);
+          }
+        }
+      });
+    }, { threshold: 0.5 });
+
+    document.querySelectorAll('.kpi-value, .insight-value, .savings-value').forEach(el => countUpObserver.observe(el));
+  </script>
+</body>
+
+</html>
